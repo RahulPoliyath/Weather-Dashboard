@@ -3,239 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeatherTech - Advanced Weather Forecast</title>
-    <meta name="description" content="Professional weather forecast dashboard with advanced analytics and real-time data">
+    <title>WeatherScope Pro - Advanced Weather Forecast</title>
+    <meta name="description" content="Professional weather forecast with hourly, daily predictions, air quality, and interactive charts">
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-<body>
-    <!-- Header Section -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="brand">
-                    <h1 class="brand-title">☁ WeatherTech</h1>
-                    <span class="brand-subtitle">Advanced Weather Analytics</span>
-                </div>
-                <div class="header-controls">
-                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                        <span class="theme-icon">🌙</span>
-                    </button>
-                    <div class="last-updated">
-                        <span class="update-label">Last updated</span>
-                        <span class="update-time" id="lastUpdated">5:41 PM</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Weather Alerts -->
-    <div class="alerts-container" id="alertsContainer">
-        <div class="container">
-            <div class="alert alert-warning">
-                <div class="alert-icon">⚠️</div>
-                <div class="alert-content">
-                    <strong>Rain Expected Tonight</strong>
-                    <p>Light to moderate rain expected between 10 PM and 3 AM. Visibility may be reduced.</p>
-                </div>
-            </div>
+<body class="weather-app" data-weather-condition="partly-cloudy" data-time="day">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h2>WeatherScope Pro</h2>
+            <p>Fetching your weather data...</p>
         </div>
     </div>
 
-    <main class="main">
-        <div class="container">
-            <!-- Search & Location Section -->
-            <section class="search-section">
-                <div class="search-container">
-                    <div class="search-box">
-                        <input type="text" placeholder="Search for a city..." class="search-input" id="searchInput">
-                        <button class="search-btn" aria-label="Search">🔍</button>
-                    </div>
-                    <button class="location-btn" id="locationBtn" aria-label="Use current location">📍</button>
+    <!-- Main App Container -->
+    <div class="app-container" id="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1 class="app-title">
+                        <span class="logo-icon">🌤️</span>
+                        WeatherScope Pro
+                    </h1>
                 </div>
-                <div class="favorites-bar" id="favoritesBar">
-                    <span class="favorites-label">Favorites:</span>
-                    <div class="favorites-list">
-                        <button class="favorite-btn active" data-location="New York, NY">New York</button>
-                        <button class="favorite-btn" data-location="London, UK">London</button>
-                        <button class="favorite-btn" data-location="Tokyo, Japan">Tokyo</button>
-                        <button class="favorite-btn" data-location="Sydney, Australia">Sydney</button>
+                
+                <div class="header-controls">
+                    <!-- Search Bar -->
+                    <div class="search-container">
+                        <input type="text" 
+                               id="location-search" 
+                               class="form-control search-input" 
+                               placeholder="Search cities..."
+                               autocomplete="off">
+                        <div class="search-suggestions" id="search-suggestions"></div>
                     </div>
+                    
+                    <!-- GPS Location Button -->
+                    <button class="btn btn--outline location-btn" id="gps-btn" title="Use current location">
+                        <span class="location-icon">📍</span>
+                    </button>
+                    
+                    <!-- Unit Toggle -->
+                    <div class="unit-toggle">
+                        <button class="unit-btn active" data-unit="celsius">°C</button>
+                        <button class="unit-btn" data-unit="fahrenheit">°F</button>
+                    </div>
+                    
+                    <!-- Theme Toggle -->
+                    <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
+                        <span class="theme-icon">🌙</span>
+                    </button>
                 </div>
-            </section>
+            </div>
+        </header>
 
-            <!-- Main Weather Dashboard -->
-            <section class="main-dashboard">
-                <div class="weather-hero">
-                    <div class="current-weather">
-                        <div class="location-info">
-                            <h2 class="current-location" id="currentLocation">New York, NY</h2>
-                            <p class="current-country">United States</p>
-                        </div>
-                        <div class="temperature-display">
-                            <span class="current-temp" id="currentTemp">22°</span>
-                            <div class="temp-details">
-                                <span class="feels-like">Feels like <span id="feelsLike">25°</span></span>
-                                <div class="temp-unit-toggle">
-                                    <button class="unit-btn active" data-unit="C">°C</button>
-                                    <button class="unit-btn" data-unit="F">°F</button>
-                                </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Current Weather Dashboard -->
+            <section class="current-weather-section">
+                <div class="current-weather-card">
+                    <div class="current-weather-main">
+                        <div class="weather-icon-large">
+                            <div class="weather-animation partly-cloudy-anim">
+                                <div class="sun"></div>
+                                <div class="cloud"></div>
                             </div>
                         </div>
-                        <div class="weather-icon">
-                            <div class="weather-symbol" id="weatherIcon">⛅</div>
+                        <div class="temperature-display">
+                            <span class="temp-value" id="current-temp">22</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+                        <div class="location-info">
+                            <h2 class="location-name" id="location-name">New York, NY</h2>
+                            <p class="weather-description" id="weather-description">Partly cloudy with gentle breeze</p>
+                            <p class="feels-like">Feels like <span id="feels-like-temp">25°C</span></p>
                         </div>
                     </div>
-                    <div class="weather-description">
-                        <h3 id="weatherCondition">Partly Cloudy</h3>
-                        <p id="weatherDesc">Partly cloudy with gentle breeze</p>
+                    
+                    <!-- Weather Details Grid -->
+                    <div class="weather-details-grid">
+                        <div class="weather-detail-item">
+                            <span class="detail-icon">💧</span>
+                            <div class="detail-content">
+                                <span class="detail-label">Humidity</span>
+                                <span class="detail-value" id="humidity">68%</span>
+                            </div>
+                        </div>
+                        <div class="weather-detail-item">
+                            <span class="detail-icon">💨</span>
+                            <div class="detail-content">
+                                <span class="detail-label">Wind</span>
+                                <span class="detail-value" id="wind-speed">12 km/h NW</span>
+                            </div>
+                        </div>
+                        <div class="weather-detail-item">
+                            <span class="detail-icon">🌡️</span>
+                            <div class="detail-content">
+                                <span class="detail-label">Pressure</span>
+                                <span class="detail-value" id="pressure">1013 hPa</span>
+                            </div>
+                        </div>
+                        <div class="weather-detail-item">
+                            <span class="detail-icon">☀️</span>
+                            <div class="detail-content">
+                                <span class="detail-label">UV Index</span>
+                                <span class="detail-value uv-moderate" id="uv-index">6</span>
+                            </div>
+                        </div>
+                        <div class="weather-detail-item">
+                            <span class="detail-icon">👁️</span>
+                            <div class="detail-content">
+                                <span class="detail-label">Visibility</span>
+                                <span class="detail-value" id="visibility">10 km</span>
+                            </div>
+                        </div>
+                        <div class="weather-detail-item">
+                            <span class="detail-icon">🌅</span>
+                            <div class="detail-content">
+                                <span class="detail-label">Sunrise</span>
+                                <span class="detail-value" id="sunrise">06:42</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Weather Metrics Grid -->
-            <section class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-icon">💧</div>
-                    <div class="metric-content">
-                        <span class="metric-label">Humidity</span>
-                        <span class="metric-value" id="humidity">65%</span>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 65%"></div>
+            <!-- Air Quality Section -->
+            <section class="air-quality-section">
+                <div class="card air-quality-card">
+                    <h3 class="section-title">Air Quality</h3>
+                    <div class="aqi-display">
+                        <div class="aqi-badge aqi-good">
+                            <span class="aqi-value" id="aqi-value">42</span>
+                            <span class="aqi-level" id="aqi-level">Good</span>
                         </div>
+                        <p class="aqi-description" id="aqi-description">Air quality is satisfactory for most people</p>
                     </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-icon">💨</div>
-                    <div class="metric-content">
-                        <span class="metric-label">Wind Speed</span>
-                        <span class="metric-value" id="windSpeed">12 km/h</span>
-                        <span class="metric-extra" id="windDirection">Northwest</span>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-icon">☀️</div>
-                    <div class="metric-content">
-                        <span class="metric-label">UV Index</span>
-                        <span class="metric-value" id="uvIndex">6</span>
-                        <span class="metric-extra uv-high">High</span>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-icon">🌬️</div>
-                    <div class="metric-content">
-                        <span class="metric-label">Air Quality</span>
-                        <span class="metric-value" id="aqiValue">45</span>
-                        <span class="metric-extra aqi-good">Good</span>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-icon">🌅</div>
-                    <div class="metric-content">
-                        <span class="metric-label">Sunrise</span>
-                        <span class="metric-value" id="sunrise">6:42 AM</span>
-                        <span class="metric-extra" id="sunset">Sunset 7:28 PM</span>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-icon">🎯</div>
-                    <div class="metric-content">
-                        <span class="metric-label">Pressure</span>
-                        <span class="metric-value" id="pressure">1013 hPa</span>
-                        <span class="metric-extra">Normal</span>
+                    <div class="pollutants-grid">
+                        <div class="pollutant-item">
+                            <span class="pollutant-name">PM2.5</span>
+                            <span class="pollutant-value">12 μg/m³</span>
+                        </div>
+                        <div class="pollutant-item">
+                            <span class="pollutant-name">PM10</span>
+                            <span class="pollutant-value">18 μg/m³</span>
+                        </div>
+                        <div class="pollutant-item">
+                            <span class="pollutant-name">O₃</span>
+                            <span class="pollutant-value">85 μg/m³</span>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Interactive Charts Section -->
-            <section class="charts-section">
-                <div class="chart-container">
-                    <h3>24-Hour Temperature Trend</h3>
-                    <div class="chart-wrapper" style="position: relative; height: 300px;">
-                        <canvas id="temperatureChart"></canvas>
+            <!-- Weather Alerts -->
+            <section class="alerts-section" id="alerts-section">
+                <div class="card alert-card alert-moderate">
+                    <div class="alert-header">
+                        <span class="alert-icon">⚠️</span>
+                        <h3 class="alert-title">Heat Advisory</h3>
+                        <span class="alert-severity">Moderate</span>
                     </div>
+                    <p class="alert-description">Hot temperatures expected through Wednesday. Stay hydrated and avoid prolonged outdoor activities.</p>
+                    <div class="alert-timing">Active until Sep 17, 8:00 PM</div>
                 </div>
+            </section>
 
-                <div class="chart-container">
-                    <h3>Precipitation Probability</h3>
-                    <div class="chart-wrapper" style="position: relative; height: 300px;">
-                        <canvas id="precipitationChart"></canvas>
+            <!-- Hourly Forecast -->
+            <section class="hourly-forecast-section">
+                <div class="card">
+                    <h3 class="section-title">24-Hour Forecast</h3>
+                    <div class="hourly-forecast-container">
+                        <div class="hourly-forecast-scroll" id="hourly-forecast-scroll">
+                            <!-- Hourly forecast items will be generated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="hourly-chart"></canvas>
                     </div>
                 </div>
             </section>
 
             <!-- 7-Day Forecast -->
-            <section class="weekly-forecast">
-                <h3>7-Day Forecast</h3>
-                <div class="forecast-grid" id="weeklyGrid">
-                    <!-- Forecast cards will be generated by JavaScript -->
+            <section class="weekly-forecast-section">
+                <div class="card">
+                    <h3 class="section-title">7-Day Forecast</h3>
+                    <div class="weekly-forecast-list" id="weekly-forecast-list">
+                        <!-- Weekly forecast items will be generated by JavaScript -->
+                    </div>
                 </div>
             </section>
 
-            <!-- Maps Integration Placeholder -->
-            <section class="maps-section">
-                <h3>Weather Map</h3>
-                <div class="map-container">
-                    <div class="map-placeholder">
-                        <div class="map-icon">🗺️</div>
-                        <p>Interactive Weather Map</p>
-                        <div class="map-layers">
-                            <button class="map-layer-btn active" data-layer="temperature">Temperature</button>
-                            <button class="map-layer-btn" data-layer="precipitation">Precipitation</button>
-                            <button class="map-layer-btn" data-layer="wind">Wind</button>
-                            <button class="map-layer-btn" data-layer="clouds">Clouds</button>
+            <!-- Weather Charts -->
+            <section class="charts-section">
+                <div class="charts-grid">
+                    <div class="card chart-card">
+                        <h3 class="section-title">Temperature Trend</h3>
+                        <div class="chart-container" style="position: relative; height: 250px;">
+                            <canvas id="temperature-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card">
+                        <h3 class="section-title">Precipitation</h3>
+                        <div class="chart-container" style="position: relative; height: 250px;">
+                            <canvas id="precipitation-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card">
+                        <h3 class="section-title">Wind Speed</h3>
+                        <div class="chart-container" style="position: relative; height: 250px;">
+                            <canvas id="wind-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card">
+                        <h3 class="section-title">Humidity Levels</h3>
+                        <div class="chart-container" style="position: relative; height: 250px;">
+                            <canvas id="humidity-chart"></canvas>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Additional Features -->
-            <section class="features-section">
-                <div class="feature-cards">
-                    <div class="feature-card">
-                        <h4>Air Quality Details</h4>
-                        <div class="aqi-details">
-                            <div class="aqi-indicator aqi-good"></div>
-                            <div class="aqi-info">
-                                <p><strong>AQI: 45 - Good</strong></p>
-                                <p>Air quality is satisfactory and air pollution poses little or no risk.</p>
-                            </div>
-                        </div>
+            <!-- Weather Map -->
+            <section class="map-section">
+                <div class="card">
+                    <h3 class="section-title">Weather Map</h3>
+                    <div class="map-controls">
+                        <button class="btn btn--sm map-layer-btn active" data-layer="temperature">Temperature</button>
+                        <button class="btn btn--sm map-layer-btn" data-layer="precipitation">Precipitation</button>
+                        <button class="btn btn--sm map-layer-btn" data-layer="wind">Wind</button>
+                        <button class="btn btn--sm map-layer-btn" data-layer="clouds">Clouds</button>
                     </div>
-
-                    <div class="feature-card">
-                        <h4>Weather Insights</h4>
-                        <ul class="insights-list">
-                            <li>Perfect conditions for outdoor activities</li>
-                            <li>UV protection recommended after 11 AM</li>
-                            <li>Light jacket recommended for evening</li>
-                            <li>Rain expected later tonight</li>
-                        </ul>
-                    </div>
+                    <div id="weather-map" class="weather-map"></div>
                 </div>
             </section>
-        </div>
-    </main>
+        </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <p>&copy; 2025 WeatherTech. Advanced weather analytics platform.</p>
-                <div class="social-links">
-                    <button class="social-btn" aria-label="Share on Twitter">🐦</button>
-                    <button class="social-btn" aria-label="Share on Facebook">📘</button>
-                    <button class="social-btn" aria-label="Share via Email">📧</button>
+        <!-- Favorites Sidebar -->
+        <aside class="favorites-sidebar" id="favorites-sidebar">
+            <div class="sidebar-header">
+                <h3>Favorite Locations</h3>
+                <button class="btn btn--sm" id="add-favorite-btn">Add Location</button>
+            </div>
+            <div class="favorites-list" id="favorites-list">
+                <!-- Favorite locations will be generated by JavaScript -->
+            </div>
+        </aside>
+
+        <!-- Favorites Toggle Button -->
+        <button class="favorites-toggle" id="favorites-toggle" title="Show favorites">
+            ⭐
+        </button>
+    </div>
+
+    <!-- Add Location Modal -->
+    <div class="modal hidden" id="add-location-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Favorite Location</h3>
+                <button class="btn btn--sm" id="close-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="new-location-input">City Name</label>
+                    <input type="text" 
+                           id="new-location-input" 
+                           class="form-control" 
+                           placeholder="Enter city name...">
                 </div>
             </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" id="cancel-add">Cancel</button>
+                <button class="btn btn--primary" id="confirm-add">Add Location</button>
+            </div>
         </div>
-    </footer>
+    </div>
 
     <script src="app.js"></script>
 </body>
